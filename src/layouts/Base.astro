@@ -1,0 +1,40 @@
+---
+import '@fontsource-variable/bricolage-grotesque/opsz.css';
+import '@fontsource/dm-mono/400.css';
+import '@fontsource/dm-mono/500.css';
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Maximum Jeff',
+  description = 'A website. Technically. Featuring one flying pig and a donation button.',
+} = Astro.props;
+
+const indexable = import.meta.env.PUBLIC_SITE_INDEXABLE === 'true';
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {!indexable && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#5aa9f5" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

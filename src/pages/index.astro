@@ -1,0 +1,64 @@
+---
+import Base from '../layouts/Base.astro';
+
+const donateUrl = import.meta.env.PUBLIC_DONATE_URL ?? '';
+const tiers = [
+  { amt: 5, label: 'One (1) snack<br>for the pig' },
+  { amt: 20, label: 'Premium wing wax' },
+  { amt: 100, label: 'Jet-pig upgrade<br>(theoretical)' },
+];
+---
+
+<Base>
+  <canvas id="stage" aria-label="A pig with wings flies across a lawn, towing a banner."></canvas>
+
+  <header class="brand">
+    <h1>Maximum<br />Jeff</h1>
+    <p id="tag">A website. Technically.</p>
+  </header>
+
+  <button class="donate" id="donateBtn" type="button">
+    Keep the pig airborne →<small>donations accepted, compliments too</small>
+  </button>
+
+  <div class="stats">
+    <span id="count">Pigs launched: 1</span> · tap the pig ·
+    <button id="ownPhoto" type="button" title="Load a photo and (optionally) a depth map">try your own photo</button>
+    <input type="file" id="fileIn" accept="image/*" multiple hidden />
+  </div>
+
+  <div class="bubble" id="bubble" aria-live="polite">OINK.</div>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <div class="card">
+      <button class="x" id="close" type="button" aria-label="Close">×</button>
+      <h2 id="dTitle">Fund the pig.</h2>
+      <p>
+        Flying pigs don't run on hope. Your donation goes directly toward wing wax, snacks, and whatever Jeff
+        decides is important this week.
+      </p>
+      {
+        tiers.map((t) => (
+          <a
+            class="tier"
+            href={donateUrl ? donateUrl.replace('{amt}', String(t.amt)) : '#'}
+            data-live={donateUrl ? 'true' : 'false'}
+            target="_blank"
+            rel="noopener"
+          >
+            <b>${t.amt}</b>
+            <span set:html={t.label} />
+          </a>
+        ))
+      }
+      <p class="fine">* Jeff promises to spend it responsibly. Promise not legally binding. Pig not legally a pilot.</p>
+    </div>
+  </div>
+
+  <div class="drop" id="drop">Drop a photo — plus its depth map<br />(name it something with "depth")</div>
+  <div class="toast" id="toast" role="status"></div>
+</Base>
+
+<script>
+  import '../scripts/scene';
+</script>

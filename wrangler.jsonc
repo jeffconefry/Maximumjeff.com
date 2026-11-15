@@ -1,0 +1,8 @@
+// Committed on purpose (playbook audit T4): pins the Worker name and compatibility date.
+// The Cloudflare adapter merges this with the build output.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "maximumjeff-com",
+  "compatibility_date": "2026-11-14",
+  "observability": { "enabled": true }
+}
