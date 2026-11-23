@@ -1,7 +1,8 @@
 ---
-import '@fontsource-variable/bricolage-grotesque/opsz.css';
-import '@fontsource/dm-mono/400.css';
-import '@fontsource/dm-mono/500.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
+import '@fontsource/jetbrains-mono/700.css';
+import '@fontsource/jetbrains-mono/800.css';
 import '../styles/global.css';
 
 interface Props {
@@ -10,8 +11,8 @@ interface Props {
 }
 
 const {
-  title = 'Maximum Jeff',
-  description = 'A website. Technically. Featuring one flying pig and a donation button.',
+  title = 'Maximum Jeff — Rhino and Grasshopper scripts, 3D print models',
+  description = 'Rhino and Grasshopper scripts and 3D print models from studio fabrication work. Some free, some for sale.',
 } = Astro.props;
 
 const indexable = import.meta.env.PUBLIC_SITE_INDEXABLE === 'true';
@@ -28,7 +29,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     {!indexable && <meta name="robots" content="noindex, nofollow" />}
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <meta name="theme-color" content="#5aa9f5" />
+    <meta name="theme-color" content="#14110E" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />

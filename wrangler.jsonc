@@ -1,8 +1,10 @@
-// Committed on purpose (playbook audit T4): pins the Worker name and compatibility date.
+// Committed on purpose (playbook audit T4): pins the Worker name, compatibility date and bindings.
 // The Cloudflare adapter merges this with the build output.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "maximumjeff-com",
   "compatibility_date": "2026-11-14",
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // Free downloads, served by src/pages/dl/[...key].ts. Bucket created 2026-11-23.
+  "r2_buckets": [{ "binding": "FILES", "bucket_name": "maximumjeff-files" }]
 }

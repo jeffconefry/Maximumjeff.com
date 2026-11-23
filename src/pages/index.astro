@@ -1,64 +1,142 @@
 ---
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
 import Base from '../layouts/Base.astro';
 
-const donateUrl = import.meta.env.PUBLIC_DONATE_URL ?? '';
-const tiers = [
-  { amt: 5, label: 'One (1) snack<br>for the pig' },
-  { amt: 20, label: 'Premium wing wax' },
-  { amt: 100, label: 'Jet-pig upgrade<br>(theoretical)' },
+const CATEGORIES = [
+  { id: 'rhino', label: 'rhino', eyebrow: 'RHINO' },
+  { id: 'grasshopper', label: 'grasshopper', eyebrow: 'GRASSHOPPER' },
+  { id: 'prints', label: '3d prints', eyebrow: '3D PRINT' },
+] as const;
+
+const items = (await getCollection('items', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title),
+);
+
+const usd = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+
+const tabs = [
+  { id: 'all', label: 'all', count: items.length },
+  ...CATEGORIES.map((c) => ({ id: c.id, label: c.label, count: items.filter((i) => i.data.category === c.id).length })),
 ];
+
+function action(d: (typeof items)[number]['data']) {
+  if (d.price === undefined) {
+    return d.file
+      ? { label: 'download', href: `/dl/${d.file}`, primary: false, external: false }
+      : { label: 'coming soon', href: undefined, primary: false, external: false };
+  }
+  return d.buyUrl
+    ? { label: 'buy', href: d.buyUrl, primary: true, external: true }
+    : { label: 'not for sale yet', href: undefined, primary: true, external: false };
+}
 ---
 
 <Base>
-  <canvas id="stage" aria-label="A pig with wings flies across a lawn, towing a banner."></canvas>
+  <div class="wrap">
+    <header class="top">
+      <div class="intro">
+        <a class="mark" href="/" aria-label="Maximum Jeff, home"><span>maximum</span><span class="plate">jeff</span></a>
+        <p>
+          Rhino and Grasshopper scripts and 3D print models from studio fabrication work. Some free, some for sale.
+          Prints are made and shipped by me.
+        </p>
+      </div>
+      <nav aria-label="Site">
+        <a href="#contact">contact</a>
+      </nav>
+    </header>
 
-  <header class="brand">
-    <h1>Maximum<br />Jeff</h1>
-    <p id="tag">A website. Technically.</p>
-  </header>
-
-  <button class="donate" id="donateBtn" type="button">
-    Keep the pig airborne →<small>donations accepted, compliments too</small>
-  </button>
-
-  <div class="stats">
-    <span id="count">Pigs launched: 1</span> · tap the pig ·
-    <button id="ownPhoto" type="button" title="Load a photo and (optionally) a depth map">try your own photo</button>
-    <input type="file" id="fileIn" accept="image/*" multiple hidden />
-  </div>
-
-  <div class="bubble" id="bubble" aria-live="polite">OINK.</div>
-
-  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="dTitle">
-    <div class="card">
-      <button class="x" id="close" type="button" aria-label="Close">×</button>
-      <h2 id="dTitle">Fund the pig.</h2>
-      <p>
-        Flying pigs don't run on hope. Your donation goes directly toward wing wax, snacks, and whatever Jeff
-        decides is important this week.
-      </p>
+    <div class="tabs" role="tablist" aria-label="Categories">
       {
-        tiers.map((t) => (
-          <a
-            class="tier"
-            href={donateUrl ? donateUrl.replace('{amt}', String(t.amt)) : '#'}
-            data-live={donateUrl ? 'true' : 'false'}
-            target="_blank"
-            rel="noopener"
+        tabs.map((t, i) => (
+          <button
+            type="button"
+            role="tab"
+            id={`tab-${t.id}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            aria-controls="catalog"
+            data-filter={t.id}
           >
-            <b>${t.amt}</b>
-            <span set:html={t.label} />
-          </a>
+            {t.label} <span class="count">{t.count}</span>
+          </button>
         ))
       }
-      <p class="fine">* Jeff promises to spend it responsibly. Promise not legally binding. Pig not legally a pilot.</p>
     </div>
-  </div>
 
-  <div class="drop" id="drop">Drop a photo — plus its depth map<br />(name it something with "depth")</div>
-  <div class="toast" id="toast" role="status"></div>
+    <section id="catalog" class="catalog" role="tabpanel" aria-labelledby="tab-all">
+      {items.length === 0 && <p class="empty">Nothing listed yet.</p>}
+      {
+        items.map(({ data: d }) => {
+          const cat = CATEGORIES.find((c) => c.id === d.category)!;
+          const a = action(d);
+          const eyebrow =
+            d.category === 'prints' ? (d.price === undefined ? '3D PRINT · FREE MODEL' : '3D PRINT · FOR SALE') : cat.eyebrow;
+          return (
+            <article class="item" data-category={d.category}>
+              <div class="thumb">
+                {d.image ? (
+                  <Image src={d.image} alt={d.imageAlt ?? d.title} width={480} />
+                ) : (
+                  <span aria-hidden="true">[render]</span>
+                )}
+              </div>
+              <div class="body">
+                <div class="eyebrow">{eyebrow}</div>
+                <h2>{d.title}</h2>
+                <p>{d.summary}</p>
+                {d.specs.length > 0 && <div class="specs">{d.specs.join(' · ')}</div>}
+              </div>
+              <div class="act">
+                <span class:list={['price', { free: d.price === undefined }]}>
+                  {d.price === undefined ? 'free' : usd.format(d.price)}
+                </span>
+                {a.href ? (
+                  <a
+                    class:list={['btn', { primary: a.primary }]}
+                    href={a.href}
+                    {...(a.external ? { target: '_blank', rel: 'noopener' } : { download: '' })}
+                  >
+                    {a.label}
+                  </a>
+                ) : (
+                  <span class="btn disabled" aria-disabled="true">
+                    {a.label}
+                  </span>
+                )}
+              </div>
+            </article>
+          );
+        })
+      }
+    </section>
+
+    <footer id="contact" class="foot">
+      <span>Prints ship in [X–Y] days. Paid scripts are delivered by email after checkout.</span>
+      <span>[your email]</span>
+    </footer>
+  </div>
 </Base>
 
 <script>
-  import '../scripts/scene';
+  // Category tabs. Without JS every item shows; with it, tabs filter and the hash (#grasshopper) is linkable.
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('.item'));
+  const panel = document.getElementById('catalog');
+
+  function show(filter: string) {
+    if (!tabs.some((t) => t.dataset.filter === filter)) filter = 'all';
+    for (const t of tabs) t.setAttribute('aria-selected', String(t.dataset.filter === filter));
+    for (const c of cards) c.hidden = filter !== 'all' && c.dataset.category !== filter;
+    panel?.setAttribute('aria-labelledby', `tab-${filter}`);
+  }
+
+  for (const t of tabs) {
+    t.addEventListener('click', () => {
+      const f = t.dataset.filter ?? 'all';
+      history.replaceState(null, '', f === 'all' ? location.pathname : `#${f}`);
+      show(f);
+    });
+  }
+  show(location.hash.slice(1) || 'all');
 </script>
